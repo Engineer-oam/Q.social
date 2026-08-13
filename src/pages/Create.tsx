@@ -159,14 +159,17 @@ export default function Create() {
   };
 
   const handlePublish = async () => {
-    if (!user || (!selectedFile && mode !== 'LIVE')) return;
+    if (!user || (!selectedFile && !caption && mode !== 'LIVE')) return;
     setIsPublishing(true);
     
     try {
-      if (mode === 'POST' && selectedFile) {
-        await createPost(user.uid, caption, [selectedFile]);
+      
+      if (mode === 'POST') {
+        const files = selectedFile ? [selectedFile] : [];
+        await createPost(user.uid, caption, files);
         navigate('/home');
       } else if (mode === 'REEL' && selectedFile) {
+
         await createPost(user.uid, caption, [selectedFile]); // Reels are posts with video
         navigate('/reels');
       } else if (mode === 'STORY' && selectedFile) {

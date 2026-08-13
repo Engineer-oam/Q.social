@@ -8,6 +8,8 @@ import {
   Bookmark, Video, X, Camera 
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
+import EditProfileModal from '../components/profile/EditProfileModal';
+import PostCard from '../components/PostCard';
 import { cn } from '../lib/utils';
 import { db, storage } from '../lib/firebase';
 import { doc, updateDoc, onSnapshot, collection, query, where, getDocs } from 'firebase/firestore';
@@ -23,18 +25,13 @@ export default function Profile() {
   const [posts, setPosts] = useState<(Post & { author?: UserProfile })[]>([]);
   const [loading, setLoading] = useState(true);
   
+  const [selectedPost, setSelectedPost] = useState<Post & { author?: UserProfile } | null>(null);
   const [activeTab, setActiveTab] = useState<'posts' | 'reels' | 'saved'>('posts');
   const navigate = useNavigate();
 
   // Edit Profile State
   const [isEditing, setIsEditing] = useState(false);
-  const [editForm, setEditForm] = useState({
-    displayName: '',
-    username: '',
-    bio: '',
-    website: '',
-    country: ''
-  });
+  
   const [isSaving, setIsSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -100,57 +97,15 @@ export default function Profile() {
   if (!realProfile || !user) return null;
 
   // Derive contents
-  const gridPosts = posts.filter(p => p.mediaUrls && p.mediaUrls.length > 0 && !p.mediaUrls[0].match(/\.(mp4|webm|mov)$/i));
+  const gridPosts = posts.filter(p => !p.mediaUrls || p.mediaUrls.length === 0 || !p.mediaUrls[0].match(/\.(mp4|webm|mov)$/i));
   const gridReels = posts.filter(p => p.mediaUrls && p.mediaUrls.length > 0 && p.mediaUrls[0].match(/\.(mp4|webm|mov)$/i));
   const gridSaved: any[] = []; // Placeholder for saved content
 
-  const handleEditClick = () => {
-    setEditForm({
-      displayName: realProfile.displayName || '',
-      username: realProfile.username || '',
-      bio: realProfile.bio || '',
-      website: realProfile.website || '',
-      country: realProfile.country || ''
-    });
-    setIsEditing(true);
-  };
+  const handleEditClick = () => setIsEditing(true);
 
-  const handleSaveProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSaving(true);
-    try {
-      await updateDoc(doc(db, 'profiles', user.uid), {
-        displayName: editForm.displayName,
-        username: editForm.username,
-        bio: editForm.bio,
-        website: editForm.website,
-        country: editForm.country
-      });
-      setIsEditing(false);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsSaving(false);
-    }
-  };
+  
 
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setIsSaving(true);
-    try {
-      const storageRef = ref(storage, `avatars/\${user.uid}_\${Date.now()}`);
-      await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(storageRef);
-      await updateDoc(doc(db, 'profiles', user.uid), {
-        photoURL: url
-      });
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsSaving(false);
-    }
-  };
+  
 
   const handleShareProfile = async () => {
     const url = `https://\${window.location.host}/user/\${realProfile.username}`;
@@ -189,7 +144,7 @@ export default function Profile() {
 
           {/* Right: Actions */}
           <div className="flex items-center space-x-2 -mr-2">
-            <button onClick={signOut} className="p-2 text-white hover:text-red-500 transition-colors">
+            <button onClick={() => navigate('/settings')} className="p-2 text-white hover:text-q-text-muted transition-colors">
               <Menu className="w-6 h-6" />
             </button>
           </div>
@@ -341,7 +296,7 @@ export default function Profile() {
               gridReels.length > 0 ? (
                 <div className="grid grid-cols-3 gap-0.5">
                   {gridReels.map(post => (
-                    <div key={post.id} className="aspect-[9/16] bg-q-surface relative overflow-hidden group cursor-pointer" onClick={() => navigate('/reels')}>
+                    <div key={post.id} className="aspect-[9/16] bg-q-surface relative overflow-hidden group cursor-pointer" onClick={() => setSelectedPost(post)}>
                       <video src={post.mediaUrls[0]} className="w-full h-full object-cover group-hover:opacity-80 transition-opacity" />
                       <div className="absolute top-2 right-2 text-white drop-shadow-md">
                         <Video className="w-4 h-4" />
@@ -380,64 +335,28 @@ export default function Profile() {
         )}
       </div>
 
-      {/* EDIT PROFILE MODAL */}
-      {isEditing && (
-        <div className="fixed inset-0 z-50 bg-black/95 flex flex-col pt-safe-top">
-          <div className="flex items-center justify-between p-4 border-b border-q-surface-border">
-            <button onClick={() => setIsEditing(false)} className="text-white p-1">
+      
+      {/* POST DETAIL MODAL */}
+      {selectedPost && (
+        <div className="fixed inset-0 z-50 bg-black/95 flex flex-col pt-safe-top overflow-y-auto">
+          <div className="sticky top-0 z-10 p-4 bg-black/90 backdrop-blur flex justify-start">
+            <button onClick={() => setSelectedPost(null)} className="text-white p-2 rounded-full hover:bg-white/10 transition-colors">
               <X className="w-6 h-6" />
             </button>
-            <h2 className="text-lg font-bold text-white">Edit profile</h2>
-            <button onClick={handleSaveProfile} disabled={isSaving} className="text-q-primary font-bold p-1 disabled:opacity-50">
-              {isSaving ? 'Saving' : 'Done'}
-            </button>
           </div>
-          
-          <div className="flex-1 overflow-y-auto p-4 space-y-6">
-            {/* Photo Edit */}
-            <div className="flex flex-col items-center space-y-3">
-              <div className="w-24 h-24 rounded-full border border-q-surface-border overflow-hidden bg-q-panel">
-                {realProfile.photoURL ? (
-                  <img src={realProfile.photoURL} alt="Avatar" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center font-bold text-2xl text-q-primary">
-                    {realProfile.displayName?.[0]?.toUpperCase()}
-                  </div>
-                )}
-              </div>
-              <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handlePhotoUpload} />
-              <button onClick={() => fileInputRef.current?.click()} className="text-q-primary font-bold text-sm">
-                Edit picture
-              </button>
-            </div>
-
-            {/* Form Fields */}
-            <div className="space-y-4">
-              <div className="border-b border-q-surface-border pb-2">
-                <label className="text-xs text-q-text-muted font-bold uppercase tracking-wider block mb-1">Name</label>
-                <input type="text" value={editForm.displayName} onChange={e => setEditForm({...editForm, displayName: e.target.value})} className="w-full bg-transparent text-white outline-none" />
-              </div>
-              <div className="border-b border-q-surface-border pb-2">
-                <label className="text-xs text-q-text-muted font-bold uppercase tracking-wider block mb-1">Username</label>
-                <input type="text" value={editForm.username} onChange={e => setEditForm({...editForm, username: e.target.value})} className="w-full bg-transparent text-white outline-none" />
-              </div>
-              <div className="border-b border-q-surface-border pb-2">
-                <label className="text-xs text-q-text-muted font-bold uppercase tracking-wider block mb-1">Bio</label>
-                <textarea value={editForm.bio} onChange={e => setEditForm({...editForm, bio: e.target.value})} rows={3} className="w-full bg-transparent text-white outline-none resize-none" />
-              </div>
-              <div className="border-b border-q-surface-border pb-2">
-                <label className="text-xs text-q-text-muted font-bold uppercase tracking-wider block mb-1">Link</label>
-                <input type="url" value={editForm.website} onChange={e => setEditForm({...editForm, website: e.target.value})} placeholder="https://" className="w-full bg-transparent text-white outline-none" />
-              </div>
-              <div className="border-b border-q-surface-border pb-2">
-                <label className="text-xs text-q-text-muted font-bold uppercase tracking-wider block mb-1">Location</label>
-                <input type="text" value={editForm.country} onChange={e => setEditForm({...editForm, country: e.target.value})} className="w-full bg-transparent text-white outline-none" />
-              </div>
-            </div>
+          <div className="max-w-xl mx-auto w-full pb-20">
+            <PostCard 
+              post={selectedPost} 
+              onHide={() => {
+                setSelectedPost(null);
+                setPosts(prev => prev.filter(p => p.id !== selectedPost.id));
+              }} 
+            />
           </div>
         </div>
       )}
-
+{/* EDIT PROFILE MODAL */}
+      {isEditing && <EditProfileModal onClose={() => setIsEditing(false)} />}
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, MessageCircle, Share2, MoreHorizontal, Bookmark, EyeOff, ShieldAlert, Ban, Info } from 'lucide-react';
+import { Heart, MessageCircle, Share2, MoreHorizontal, Bookmark, EyeOff, ShieldAlert, Ban, Info, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Post, UserProfile } from '../types';
 import { useAuth } from '../features/auth/AuthContext';
@@ -30,9 +30,24 @@ export default function PostCard({ post, onHide }: PostCardProps) {
 
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
 
+
+  const handleDelete = async () => {
+    if (window.confirm("Are you sure you want to delete this post?")) {
+      try {
+        const { deleteDoc, doc } = await import('firebase/firestore');
+        await deleteDoc(doc(db, 'posts', post.id));
+        if (onHide) onHide();
+      } catch (err) {
+        console.error("Failed to delete post", err);
+      }
+    }
+  };
+
   useEffect(() => {
+
     if (!profile) return;
-    const checkInteractions = async () => {
+    
+const checkInteractions = async () => {
       const liked = await hasInteracted('likes', post.id, profile.id);
       setIsLiked(liked);
       const saved = await hasInteracted('saves', post.id, profile.id);
@@ -141,7 +156,14 @@ export default function PostCard({ post, onHide }: PostCardProps) {
                     <span>Why am I seeing this?</span>
                   </button>
                 )}
-                <button onClick={() => setShowMenu(false)} className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-q-surface text-white text-sm transition-colors text-left border-t border-q-surface-border">
+                
+                {profile?.id === post.userId && (
+                  <button onClick={handleDelete} className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-q-surface text-red-500 text-sm transition-colors text-left border-t border-q-surface-border">
+                    <Trash2 className="w-4 h-4" />
+                    <span>Delete Post</span>
+                  </button>
+                )}
+<button onClick={() => setShowMenu(false)} className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-q-surface text-white text-sm transition-colors text-left border-t border-q-surface-border">
                   <ShieldAlert className="w-4 h-4" />
                   <span>Report</span>
                 </button>

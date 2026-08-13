@@ -7,6 +7,17 @@ export interface UserProfile {
   bio: string | null;
   country: string | null;
   website?: string | null;
+  pronouns?: string | null;
+  gender?: string | null;
+  profileType?: 'Private' | 'Public' | 'Professional';
+  category?: string | null;
+  contactEmail?: string | null;
+  contactPhone?: string | null;
+  aiCreator?: boolean;
+  showProfileOnSearch?: boolean;
+  usernameLastChanged?: number | null;
+  links?: { title: string, url: string }[];
+  banners?: string[];
   statusNote?: string | null;
   createdAt: number;
   followersCount: number;
