@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 import { motion } from 'framer-motion';
@@ -14,6 +14,8 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isResetting, setIsResetting] = useState(false);
+  const [resetMessage, setResetMessage] = useState('');
   const navigate = useNavigate();
   const { refreshProfile } = useAuth();
 
@@ -50,6 +52,26 @@ export default function Login() {
       setError(err.message || 'Google Sign-In failed.');
     } finally {
       setGoogleLoading(false);
+    }
+  };
+
+  
+  const handleResetPassword = async () => {
+    if (!email) {
+      setError('Please enter your email address to reset your password.');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    setResetMessage('');
+    try {
+      await sendPasswordResetEmail(auth, email);
+      setResetMessage('Password reset email sent! Check your inbox.');
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || 'Failed to send reset email.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -97,6 +119,11 @@ export default function Login() {
         </div>
 
         <form onSubmit={handleLogin} className="space-y-5">
+          {resetMessage && (
+            <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 text-sm text-center">
+              {resetMessage}
+            </div>
+          )}
           {error && (
             <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
               {error}
@@ -145,8 +172,17 @@ export default function Login() {
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-q-text-muted ml-1">Password</label>
+                    <div className="space-y-1">
+            <div className="flex items-center justify-between ml-1">
+              <label className="text-sm font-medium text-q-text-muted">Password</label>
+              <button 
+                type="button" 
+                onClick={handleResetPassword}
+                className="text-xs text-q-primary hover:text-q-primary-hover font-medium transition-colors"
+              >
+                Forgot password?
+              </button>
+            </div>
             <input
               type="password"
               required

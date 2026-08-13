@@ -190,9 +190,9 @@ export default function Create() {
         await createStory(user.uid, url, mediaType);
         navigate('/home');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Publish error", error);
-      alert("Failed to publish. Try again.");
+      alert('Failed to publish media. Please ensure Firebase Storage is enabled in your Firebase Console (test mode).');
     } finally {
       setIsPublishing(false);
     }
