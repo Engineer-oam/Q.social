@@ -1,0 +1,11 @@
+{
+  "name": "Q-Social",
+  "description": "A modern social media application with photo and video sharing, stories, and reels.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
