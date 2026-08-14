@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+const fs = require('fs');
+const notifCode = `import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Heart, MessageCircle, UserPlus, Bell } from 'lucide-react';
 import { useAuth } from '../features/auth/AuthContext';
@@ -138,7 +139,7 @@ export default function NotificationsPanel({
                         !notif.read && "bg-q-primary/5"
                       )}
                     >
-                      <Link to={`/profile/${notif.actorId}`} onClick={onClose}>
+                      <Link to={\`/profile/\${notif.actorId}\`} onClick={onClose}>
                         <div className="relative">
                           {notif.actorPhotoUrl ? (
                             <img src={notif.actorPhotoUrl} alt={notif.actorName} className="w-10 h-10 rounded-full object-cover" />
@@ -158,11 +159,11 @@ export default function NotificationsPanel({
                       
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-q-text">
-                          <Link to={`/profile/${notif.actorId}`} onClick={onClose} className="font-bold text-white hover:underline mr-1">
+                          <Link to={\`/profile/\${notif.actorId}\`} onClick={onClose} className="font-bold text-white hover:underline mr-1">
                             {notif.actorName}
                           </Link>
                           {notif.type === 'like' && 'liked your post.'}
-                          {notif.type === 'comment' && `commented: "${notif.text}"`}
+                          {notif.type === 'comment' && \`commented: "\${notif.text}"\`}
                           {notif.type === 'follow' && 'started following you.'}
                           {notif.type === 'system' && notif.text}
                         </p>
@@ -172,7 +173,7 @@ export default function NotificationsPanel({
                       </div>
 
                       {notif.postId && (
-                        <Link to={`/post/${notif.postId}`} onClick={onClose} className="shrink-0">
+                        <Link to={\`/post/\${notif.postId}\`} onClick={onClose} className="shrink-0">
                           {notif.postImageUrl ? (
                             <img src={notif.postImageUrl} alt="Post" className="w-10 h-10 rounded object-cover border border-q-surface-border" />
                           ) : (
@@ -191,3 +192,5 @@ export default function NotificationsPanel({
     </AnimatePresence>
   );
 }
+`;
+fs.writeFileSync('src/components/NotificationsPanel.tsx', notifCode);

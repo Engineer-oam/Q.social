@@ -6,6 +6,8 @@ import { useAuth } from '../features/auth/AuthContext';
 import { toggleInteraction, hasInteracted } from '../features/posts/interactionService';
 import { doc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+
+
 import { cn } from '../lib/utils';
 import Comments from './Comments';
 import { motion, AnimatePresence } from 'motion/react';
@@ -63,7 +65,7 @@ const checkInteractions = async () => {
     setLikesCount(prev => wasLiked ? prev - 1 : prev + 1);
     
     const postRef = doc(db, 'posts', post.id);
-    await toggleInteraction('likes', post.id, profile.id, postRef);
+await toggleInteraction('likes', post.id, profile.id, postRef);
   };
 
   const handleSave = async () => {

@@ -1,3 +1,4 @@
+import { db } from "../lib/firebase";
 import React, { useEffect, useState, useRef } from 'react';
 import { Search as SearchIcon, Filter, ArrowUp, Loader2, UserPlus } from 'lucide-react';
 import { useAuth } from '../features/auth/AuthContext';
@@ -8,7 +9,7 @@ import { cn } from '../lib/utils';
 import { Link, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import { doc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+
 
 const TOPICS = ['All', 'Technology', 'Business', 'Design', 'Architecture', 'Science', 'Music', 'Sports', 'Gaming', 'Travel'];
 
@@ -24,7 +25,7 @@ export default function Explore() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  const [lastDoc, setLastDoc] = useState<any>(null);
+  const [offset, setOffset] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
 
   const observerTarget = useRef(null);
@@ -64,8 +65,8 @@ export default function Explore() {
     }
     
     try {
-      const currentLastDoc = isLoadMore ? lastDoc : undefined;
-      const { posts: newPosts, lastDoc: newLastDoc } = await getExplorePosts(profile, 10, currentLastDoc, topic);
+      const currentOffset = isLoadMore ? offset : 0;
+      const { posts: newPosts, nextOffset: newOffset } = await getExplorePosts(profile, 10, currentOffset, topic);
       
       if (isLoadMore) {
         setPosts(prev => [...prev, ...newPosts]);
@@ -73,7 +74,7 @@ export default function Explore() {
         setPosts(newPosts);
       }
       
-      setLastDoc(newLastDoc);
+      setOffset(newOffset);
       setHasMore(newPosts.length === 10);
     } catch (error) {
       console.error('Failed to fetch explore posts:', error);
@@ -99,7 +100,7 @@ export default function Explore() {
     );
     if (observerTarget.current) observer.observe(observerTarget.current);
     return () => observer.disconnect();
-  }, [hasMore, loading, loadingMore, lastDoc, activeTopic]);
+  }, [hasMore, loading, loadingMore, offset, activeTopic]);
 
   const handleTopicClick = (topic: string) => {
     if (topic === activeTopic) return;

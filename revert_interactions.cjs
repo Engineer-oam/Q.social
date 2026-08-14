@@ -1,4 +1,6 @@
-import { collection, addDoc, deleteDoc, doc, getDocs, query, where, writeBatch, increment, serverTimestamp, orderBy, limit, startAfter } from 'firebase/firestore';
+const fs = require('fs');
+
+const interactionServiceCode = `import { collection, addDoc, deleteDoc, doc, getDocs, query, where, writeBatch, increment, serverTimestamp, orderBy, limit, startAfter } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { Comment, Interaction } from '../../types';
 
@@ -89,3 +91,5 @@ export const deleteComment = async (commentId: string, postId: string) => {
   batch.update(doc(db, 'posts', postId), { commentsCount: increment(-1) });
   await batch.commit();
 };
+`;
+fs.writeFileSync('src/features/posts/interactionService.ts', interactionServiceCode);

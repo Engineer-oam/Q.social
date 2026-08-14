@@ -1,5 +1,5 @@
 const fs = require('fs');
-let code = fs.readFileSync('src/components/PostCard.tsx', 'utf8');
+let code = fs.readFileSync('src/components/Reel.tsx', 'utf8');
 
 code = code.replace(
   "import { doc } from 'firebase/firestore';",
@@ -11,16 +11,14 @@ code = code.replace(
   "await toggleInteraction('likes', post.id, profile.id, true);"
 );
 
-// We should also replace it if db was changed to supabase
 code = code.replace(
   /const postRef = doc\(.*?supabase, 'posts', post\.id\);\s*await toggleInteraction\('likes', post\.id, profile\.id, postRef\);/m,
   "await toggleInteraction('likes', post.id, profile.id, true);"
 );
 
-// Fallback in case of something else
 code = code.replace(
   /const postRef = doc\(.*?\);\s*await toggleInteraction\('likes', post\.id, profile\.id, postRef\);/m,
   "await toggleInteraction('likes', post.id, profile.id, true);"
 );
 
-fs.writeFileSync('src/components/PostCard.tsx', code);
+fs.writeFileSync('src/components/Reel.tsx', code);

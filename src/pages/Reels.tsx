@@ -17,7 +17,7 @@ export default function Reels() {
   const [loadingMore, setLoadingMore] = useState(false);
   
   const [hasMore, setHasMore] = useState(true);
-  const [lastDoc, setLastDoc] = useState<any>(null);
+  const [offset, setOffset] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
 
   const [activeIndex, setActiveIndex] = useState(0);
@@ -35,8 +35,8 @@ export default function Reels() {
     }
     
     try {
-      const currentLastDoc = isLoadMore ? lastDoc : undefined;
-      const { posts: newReels, lastDoc: newLastDoc } = await getReelsFeed(profile, 5, type, currentLastDoc);
+      const currentOffset = isLoadMore ? offset : 0;
+      const { posts: newReels, nextOffset: newOffset } = await getReelsFeed(profile, 5, type, currentOffset);
       
       if (isLoadMore) {
         setReels(prev => [...prev, ...newReels]);
@@ -46,7 +46,7 @@ export default function Reels() {
         if (scrollContainerRef.current) scrollContainerRef.current.scrollTop = 0;
       }
       
-      setLastDoc(newLastDoc);
+      setOffset(newOffset);
       setHasMore(newReels.length === 5);
     } catch (error) {
       console.error('Failed to fetch reels:', error);

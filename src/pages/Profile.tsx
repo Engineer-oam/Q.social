@@ -1,3 +1,4 @@
+import { db } from "../lib/firebase";
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../features/auth/AuthContext';
 import { getFeedPosts } from '../features/posts/postService';
@@ -11,7 +12,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import EditProfileModal from '../components/profile/EditProfileModal';
 import PostCard from '../components/PostCard';
 import { cn } from '../lib/utils';
-import { db, storage } from '../lib/firebase';
+
 import { doc, updateDoc, onSnapshot, collection, query, where, getDocs } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 

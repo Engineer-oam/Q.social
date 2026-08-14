@@ -1,8 +1,9 @@
+import { db, storage } from "../lib/firebase";
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../features/auth/AuthContext';
 import { collection, query, where, orderBy, onSnapshot, getDocs, doc, updateDoc, startAt, endAt, limit } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage } from '../lib/firebase';
+
 import { ChatRoom, Message, UserProfile } from '../types';
 import { Search, Edit, ChevronLeft, MoreVertical, Image as ImageIcon, Mic, Send, Loader2, Menu, ChevronDown, Activity, Map, Plus } from 'lucide-react';
 import { format, isToday, isYesterday } from 'date-fns';

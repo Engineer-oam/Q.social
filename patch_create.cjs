@@ -1,24 +1,27 @@
 const fs = require('fs');
 let code = fs.readFileSync('src/pages/Create.tsx', 'utf8');
 
-// Modify handlePublish to allow text posts
 code = code.replace(
-  "if (!user || (!selectedFile && mode !== 'LIVE')) return;",
-  "if (!user || (!selectedFile && !caption && mode !== 'LIVE')) return;"
+  "import { addDoc, collection } from 'firebase/firestore';",
+  ""
 );
 
-// If selectedFile is missing but we have caption for POST mode
-const postModeReplacement = `
-      if (mode === 'POST') {
-        const files = selectedFile ? [selectedFile] : [];
-        await createPost(user.uid, caption, files);
-        navigate('/home');
-      } else if (mode === 'REEL' && selectedFile) {
-`;
-
 code = code.replace(
-  /if \(mode === 'POST' && selectedFile\) \{\s*await createPost\(user\.uid, caption, \[selectedFile\]\);\s*navigate\('\/home'\);\s*\} else if \(mode === 'REEL' && selectedFile\) \{/,
-  postModeReplacement
+  /await addDoc\(collection\(db, 'lives'\), \{[\s\S]*?userId: user\.uid,[\s\S]*?\}\);/m,
+  `await supabase.from('lives').insert({
+        userId: user.id,
+        status: 'active',
+        startedAt: Date.now(),
+        title: caption || \`\${profile?.displayName || 'User'}'s Live Video\`
+      });`
+);
+
+code = code.replace(/import \{.*?db.*?\} from '\.\.\/lib\/firebase';/g, "");
+
+// dynamic imports
+code = code.replace(
+  /const \{ ref, uploadBytes, getDownloadURL \} = await import\('firebase\/storage'\);[\s\S]*?const \{ storage \} = await import\('\.\.\/lib\/firebase'\);/m,
+  `// using supabase storage in postService`
 );
 
 fs.writeFileSync('src/pages/Create.tsx', code);

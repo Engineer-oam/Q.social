@@ -11,7 +11,12 @@ service cloud.firestore {
 
     match /profiles/{userId} {
       allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated() && isOwner(userId);
+      allow create: if isAuthenticated() && isOwner(userId);
+      allow update: if isAuthenticated() && isOwner(userId) && (
+        request.resource.data.get('username', '') == resource.data.get('username', '') ||
+        resource.data.get('usernameLastChanged', 0) == 0 ||
+        request.time.toMillis() - resource.data.get('usernameLastChanged', 0) >= 604800000
+      );
     }
     
     match /posts/{postId} {

@@ -19,7 +19,7 @@ export default function Home() {
   const [loadingMore, setLoadingMore] = useState(false);
   
   const [hasMore, setHasMore] = useState(true);
-  const [lastDoc, setLastDoc] = useState<any>(null);
+  const [offset, setOffset] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
   
   const [newPostsAvailable, setNewPostsAvailable] = useState(false);
@@ -40,8 +40,8 @@ export default function Home() {
     }
     
     try {
-      const currentLastDoc = isLoadMore ? lastDoc : undefined;
-      const { posts: newPosts, lastDoc: newLastDoc } = await getFeedPosts(profile, 10, 'for-you', currentLastDoc);
+      const currentOffset = isLoadMore ? offset : 0;
+      const { posts: newPosts, nextOffset: newOffset } = await getFeedPosts(profile, 10, 'for-you', currentOffset);
       
       // Inject transparency reasons for "for-you"
       const enrichedPosts = newPosts.map(p => {
@@ -61,7 +61,7 @@ export default function Home() {
         setPosts(enrichedPosts);
       }
       
-      setLastDoc(newLastDoc);
+      setOffset(newOffset);
       setHasMore(newPosts.length === 10);
       setNewPostsAvailable(false);
     } catch (error) {
@@ -89,7 +89,7 @@ export default function Home() {
     );
     if (observerTarget.current) observer.observe(observerTarget.current);
     return () => observer.disconnect();
-  }, [hasMore, loading, loadingMore, lastDoc]);
+  }, [hasMore, loading, loadingMore, offset]);
 
   const handleRefresh = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });

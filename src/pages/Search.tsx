@@ -1,10 +1,11 @@
+import { db } from "../lib/firebase";
 import React, { useEffect, useState, useRef } from 'react';
 import { Search as SearchIcon, X, Loader2, Play } from 'lucide-react';
 import { useAuth } from '../features/auth/AuthContext';
 import { getExplorePosts } from '../features/posts/postService';
 import { Post, UserProfile } from '../types';
 import { collection, query, where, getDocs, orderBy, limit, startAt, endAt } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+
 import { cn } from '../lib/utils';
 import { Link } from 'react-router-dom';
 import PostCard from '../components/PostCard';

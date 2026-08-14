@@ -1,10 +1,11 @@
+import { db } from "../../lib/firebase";
 import { useEffect, useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { Home, Compass, Search, PlusSquare, User, MessageSquare, Settings, Clapperboard, Send } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useAuth } from '../../features/auth/AuthContext';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
-import { db } from '../../lib/firebase';
+
 import { ChatRoom } from '../../types';
 
 export default function Layout() {

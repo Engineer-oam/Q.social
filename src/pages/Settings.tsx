@@ -1,3 +1,4 @@
+import { db } from "../lib/firebase";
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../features/auth/AuthContext';
@@ -13,7 +14,7 @@ import EditProfileModal from '../components/profile/EditProfileModal';
 import { cn } from '../lib/utils';
 import { deleteDoc, doc } from 'firebase/firestore';
 import { deleteUser } from 'firebase/auth';
-import { db } from '../lib/firebase';
+
 
 export default function Settings() {
   const navigate = useNavigate();

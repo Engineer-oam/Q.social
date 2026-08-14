@@ -1,13 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Camera, ChevronRight, Loader2, Link as LinkIcon, AtSign, AlignLeft, Info } from 'lucide-react';
 import { useAuth } from '../../features/auth/AuthContext';
-import { 
-  updateProfile, 
-  uploadProfilePicture, 
-  isUsernameAvailable, 
-  validateUsernameRules, 
-  canChangeUsername 
-} from '../../features/profile/profileService';
+import { updateProfile, validateUsernameRules, isUsernameAvailable, canChangeUsername, uploadProfilePicture } from '../../features/profile/profileService';
 
 export default function EditProfileModal({ onClose }: { onClose: () => void }) {
   const { profile, user, refreshProfile } = useAuth();

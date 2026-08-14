@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from 'react';
+const fs = require('fs');
+
+const commentsCode = `import React, { useEffect, useState } from 'react';
 import { useAuth } from '../features/auth/AuthContext';
 import { getComments, addComment, deleteComment } from '../features/posts/interactionService';
 import { Comment, UserProfile } from '../types';
@@ -175,3 +177,5 @@ export default function Comments({ postId, onClose, onCommentAdded }: CommentsPr
     </div>
   );
 }
+`;
+fs.writeFileSync('src/components/Comments.tsx', commentsCode);

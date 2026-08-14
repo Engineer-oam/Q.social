@@ -1,4 +1,87 @@
-import { collection, addDoc, getDocs, query, orderBy, limit, startAfter, where } from 'firebase/firestore';
+const fs = require('fs');
+
+const authContextCode = `import React, { createContext, useContext, useEffect, useState } from 'react';
+import { User, onAuthStateChanged, signOut as firebaseSignOut } from 'firebase/auth';
+import { doc, getDoc, onSnapshot } from 'firebase/firestore';
+import { auth, db } from '../../lib/firebase';
+import { UserProfile } from '../../types';
+
+interface AuthState {
+  user: User | null;
+  profile: UserProfile | null;
+  loading: boolean;
+  signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
+}
+
+const AuthContext = createContext<AuthState>({
+  user: null,
+  profile: null,
+  loading: true,
+  signOut: async () => {},
+  refreshProfile: async () => {},
+});
+
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchProfile = async (uid: string) => {
+    try {
+      const docRef = doc(db, 'profiles', uid);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        setProfile({ id: docSnap.id, ...docSnap.data() } as UserProfile);
+      } else {
+        setProfile(null);
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      setProfile(null);
+    }
+  };
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      setUser(currentUser);
+      if (currentUser) {
+        await fetchProfile(currentUser.uid);
+      } else {
+        setProfile(null);
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+  
+  useEffect(() => {
+    if (!user) return;
+    const unsub = onSnapshot(doc(db, 'profiles', user.uid), (doc) => {
+      if (doc.exists()) {
+        setProfile({ id: doc.id, ...doc.data() } as UserProfile);
+      }
+    });
+    return () => unsub();
+  }, [user]);
+
+  const handleSignOut = async () => {
+    await firebaseSignOut(auth);
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, profile, loading, signOut: handleSignOut, refreshProfile: async () => { if (user) await fetchProfile(user.uid); } }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => useContext(AuthContext);
+`;
+fs.writeFileSync('src/features/auth/AuthContext.tsx', authContextCode);
+
+const postServiceCode = `import { collection, addDoc, getDocs, query, orderBy, limit, startAfter, where } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../../lib/firebase';
 import { Post, UserProfile } from '../../types';
@@ -7,7 +90,7 @@ import { getDoc, doc } from 'firebase/firestore';
 export const createPost = async (userId: string, content: string, files: File[]) => {
   const mediaUrls: string[] = [];
   for (const file of files) {
-    const fileRef = ref(storage, `posts/${userId}/${Date.now()}_${file.name}`);
+    const fileRef = ref(storage, \`posts/\${userId}/\${Date.now()}_\${file.name}\`);
     await uploadBytes(fileRef, file);
     const url = await getDownloadURL(fileRef);
     mediaUrls.push(url);
@@ -85,3 +168,6 @@ export const getSuggestedCreators = async (currentProfile?: UserProfile | null) 
   });
   return creators.slice(0, 5);
 };
+`;
+fs.writeFileSync('src/features/posts/postService.ts', postServiceCode);
+

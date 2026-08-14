@@ -5,15 +5,18 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../features/auth/AuthContext';
 import { createPost } from '../features/posts/postService';
 import { createStory } from '../features/stories/storyService';
-import { cn } from '../lib/utils';
 import { addDoc, collection } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { db, storage } from '../lib/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { cn } from '../lib/utils';
+
+
 
 type CreateMode = 'POST' | 'STORY' | 'REEL' | 'LIVE';
 
 export default function Create() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [mode, setMode] = useState<CreateMode>('STORY');
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
@@ -179,8 +182,7 @@ export default function Create() {
         // Actually, let's adapt createPost to just do the upload if we need to.
         // Or better, let's just make a POST with #story ? No, use a custom upload inline here.
         // For brevity in this instruction, we will use createPost but perhaps we should implement the storage upload for story.
-        const { ref, uploadBytes, getDownloadURL } = await import('firebase/storage');
-        const { storage } = await import('../lib/firebase');
+        // using supabase storage in postService
         
         const storageRef = ref(storage, `stories/${user.uid}/${Date.now()}_${selectedFile.name}`);
         await uploadBytes(storageRef, selectedFile);
@@ -206,7 +208,7 @@ export default function Create() {
         userId: user.uid,
         status: 'active',
         startedAt: Date.now(),
-        title: caption || `${user.displayName}'s Live Video`
+        title: caption || `${profile?.displayName || 'User'}'s Live Video`
       });
       // Mock viewer increment
       setInterval(() => setLiveViewers(v => v + Math.floor(Math.random() * 3)), 2000);
